@@ -96,6 +96,16 @@ Tutorial **kaldığınız adımdan** açılmaz; başlangıçtan başlayıp ilerl
 
 Workshop yoğun saatlerde geçici olabilir. Uygulama otomatik olarak **5 kez tekrar** dener (üstel backoff ile). Yine de hata sürerse 10-20 saniye bekleyip **Summarize Content** butonuna tekrar basın.
 
+### Yeni deploy ettim ama eski sürüm görünüyor
+
+`deploy.sh` **lokal klondaki kodu** Cloud Run'a paketler — GitHub'dan otomatik çekmez. Repo güncellendiyse deploy öncesi pull yapın:
+
+```bash
+cd ~/cloudshell_open/gcp-workshop-tutorial* 2>/dev/null || cd ~/gcp-workshop-tutorial
+git pull origin fix/workshop-hardening
+bash deploy.sh $(gcloud config get-value project)
+```
+
 ---
 
 ## 🧹 Workshop sonunda
