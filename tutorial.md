@@ -107,22 +107,23 @@ echo "Proje ID: $PROJECT_ID"
 
 Proje ID'nizi gormelisiniz. Bos geliyorsa proje secmeden devam etmissiniz demektir — geri donup proje secin.
 
-### Gerekli izinleri verin
+### Repo dizinini bulun
 
-Bu adimda gerekli tum izinleri tek seferde verecek bir script calistiriyoruz.
-
-Once script dosyasini indirin:
+Tutorial baslarken proje GitHub'dan otomatik klonlandi. Repo dizinini bir degiskene kaydedin — sonraki adimlarda kullanacagiz:
 
 ```sh
-export BASE="https://raw.githubusercontent.com"
-export REPO="GDGonCampusPAU/gcp-workshop-tutorial/refs/heads/vertex-ai"
-curl -o setup-iam.sh "$BASE/$REPO/setup-iam.sh"
+export REPO_DIR=$(dirname $(find ~ -maxdepth 4 -name "summarizer-app" -type d 2>/dev/null | head -1))
+echo "Repo dizini: $REPO_DIR"
 ```
 
-Sonra calistirin:
+`Repo dizini: /home/.../gcp-workshop-tutorial` benzeri bir yol gormelisiniz. Bos veya sadece `.` geliyorsa README'deki manuel klonlama adimini takip edip Cloud Shell'i tazeleyin.
+
+### Gerekli izinleri verin
+
+Bu adimda gerekli tum izinleri tek seferde verecek scripti calistiriyoruz:
 
 ```sh
-bash setup-iam.sh $PROJECT_ID
+bash $REPO_DIR/setup-iam.sh $PROJECT_ID
 ```
 
 Script ne yapar:
@@ -146,7 +147,7 @@ Vertex AI, Google'in kurumsal AI platformudur. Her Gemini cagrisi dogrudan GCP k
 Uygulama dosyalari GitHub'da hazir bekliyor.
 
 ```sh
-export APP_DIR=$(find ~ -name "summarizer-app" -type d 2>/dev/null | head -1)
+export APP_DIR=$REPO_DIR/summarizer-app
 echo $APP_DIR
 ```
 
@@ -260,25 +261,13 @@ Simdi uygulamayi internete aciyoruz!
 
 ### Deploy komutunu calistirin
 
-Once deploy scriptini indirin:
+Repo'da hazir bekleyen deploy scriptini calistirin:
 
 ```sh
-curl -o deploy.sh "$BASE/$REPO/deploy.sh"
+bash $REPO_DIR/deploy.sh $PROJECT_ID
 ```
 
-Sonra summarizer-app klasorune gidip scripti calistirin:
-
-```sh
-cd $APP_DIR
-```
-
-```sh
-bash deploy.sh $PROJECT_ID
-```
-
-Ilk seferde "Do you want to continue (Y/n)?" sorusu gelecek — **Y** yazip Enter'a basin.
-
-**Bu adim 3-5 dakika surebilir.** Python image indiriliyor ve kutuphaneler kuruluyor.
+**Bu adim 3-5 dakika surebilir.** Python image indiriliyor ve kutuphaneler kuruluyor. Script otomatik olarak ilerler — herhangi bir onay sorusu cikmaz.
 
 ### Basarili deploy ciktisi
 
@@ -306,10 +295,12 @@ curl -s BURAYA_SERVIS_URL/
 
 URL'yi kopyalayip tarayicinizin adres cubuguna yapistirin.
 
-1. Herhangi bir YouTube video URL'si yapistirin
+1. **Public** bir YouTube video URL'si yapistirin (test icin: `https://www.youtube.com/watch?v=jNQXAC9IVRw`)
 2. Opsiyonel: Custom Instructions girin — ornegin "Summarize in Turkish, use bullet points"
 3. **Summarize Content** butonuna basin
 4. Gemini birkaç saniye icinde ozeti uretecek!
+
+> **Onemli:** Vertex AI sadece **public** veya kendi hesabinizla yuklediginiz YouTube videolarini isleyebilir. Private/unlisted videolarda erisim hatasi alirsiniz.
 
 ## Cloud Console'dan Inceleme
 

@@ -28,18 +28,18 @@ REGION=${2:-us-central1}
 SERVICE_NAME="youtube-summarizer"
 REPO_NAME="cloud-run-source-deploy"
 
-# --- 1b. Dogru klasore git ---
+# --- 1b. Dogru klasoru bul ---
+# Script hem repo kokunden hem de summarizer-app icinden calistirilabilir.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-APP_DIR="$SCRIPT_DIR/summarizer-app"
 
-if [ ! -d "$APP_DIR" ]; then
-  echo "HATA: summarizer-app klasoru bulunamadi: $APP_DIR"
-  echo "       Bu script'i repo kokunden calistirmalisin."
-  exit 1
-fi
-
-if [ ! -f "$APP_DIR/Dockerfile" ]; then
-  echo "HATA: Dockerfile bulunamadi: $APP_DIR/Dockerfile"
+if [ -f "$SCRIPT_DIR/Dockerfile" ]; then
+  APP_DIR="$SCRIPT_DIR"
+elif [ -f "$SCRIPT_DIR/summarizer-app/Dockerfile" ]; then
+  APP_DIR="$SCRIPT_DIR/summarizer-app"
+else
+  echo "HATA: Dockerfile bulunamadi."
+  echo "       Aranan: $SCRIPT_DIR/Dockerfile"
+  echo "       Veya:   $SCRIPT_DIR/summarizer-app/Dockerfile"
   exit 1
 fi
 
