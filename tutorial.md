@@ -26,7 +26,11 @@ gcloud config set project PROJE_ID_BURAYA
 ```
 
 ```sh
-export PROJECT_ID=$(gcloud config get-value project) && echo "Aktif proje: $PROJECT_ID"
+export PROJECT_ID=$(gcloud config get-value project)
+```
+
+```sh
+echo "Aktif proje: $PROJECT_ID"
 ```
 
 Proje ID'nizi gormelisiniz. Dogru projeyi goruyorsaniz **Next** butonuna basin.
@@ -54,7 +58,7 @@ Billing sayfasina gidin:
 Sonra terminalde billing'in aktif oldugunu dogrulayin:
 
 ```sh
-gcloud billing projects describe $PROJECT_ID 2>/dev/null | grep billingEnabled
+gcloud billing projects describe $PROJECT_ID --format="value(billingEnabled)"
 ```
 
 `billingEnabled: true` gormelisiniz. Gormuyorsaniz billing baglamayi tekrar deneyin.
@@ -84,40 +88,34 @@ Bu uygulama Vertex AI uzerinden Gemini modeline baglanarak YouTube videolarini o
 Once aktif projenizi bir degiskene atayin — bu degiskeni tutorial boyunca kullanacagiz:
 
 ```sh
-export PROJECT_ID=$(gcloud config get-value project) && echo "Proje ID: $PROJECT_ID"
+export PROJECT_ID=$(gcloud config get-value project)
+```
+
+```sh
+echo "Proje ID: $PROJECT_ID"
 ```
 
 Proje ID'nizi gormelisiniz. Bos geliyorsa proje secmeden devam etmissiniz demektir — geri donup proje secin.
 
 ### Gerekli izinleri verin
 
-Bu uc komut; Cloud Run'in Vertex AI'a erisebilmesi, Cloud Storage'dan kaynak yukliyebilmesi ve log yazabilmesi icin gerekli izinleri verir:
+Bu adimda gerekli tum izinleri tek seferde verecek bir script calistiriyoruz.
+
+Once script dosyasini indirin:
 
 ```sh
-PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)') && gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" --role="roles/aiplatform.user"
+curl -o setup-iam.sh https://raw.githubusercontent.com/GDGonCampusPAU/gcp-workshop-tutorial/vertex-ai/setup-iam.sh
 ```
+
+Sonra calistirin:
 
 ```sh
-gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')-compute@developer.gserviceaccount.com" --role="roles/storage.admin"
+bash setup-iam.sh $PROJECT_ID
 ```
 
-```sh
-gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')-compute@developer.gserviceaccount.com" --role="roles/logging.logWriter"
-```
-
-Cloud Build service account'una da gerekli izinleri verin:
-
-```sh
-gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@cloudbuild.gserviceaccount.com" --role="roles/artifactregistry.writer"
-```
-
-```sh
-gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@cloudbuild.gserviceaccount.com" --role="roles/run.admin"
-```
-
-```sh
-gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@cloudbuild.gserviceaccount.com" --role="roles/iam.serviceAccountUser"
-```
+Script ne yapar:
+- Cloud Run servisine Vertex AI, Storage ve Logging izinleri verir
+- Cloud Build servisine Artifact Registry, Cloud Run ve IAM izinleri verir
 
 **Ne yapti bu komutlar?**
 
@@ -136,7 +134,11 @@ Vertex AI, Google'in kurumsal AI platformudur. Her Gemini cagrisi dogrudan GCP k
 Uygulama dosyalari GitHub'da hazir bekliyor.
 
 ```sh
-cd $(find ~ -path "*/gcp-workshop-tutorial*/summarizer-app" -type d 2>/dev/null | head -1)
+export APP_DIR=$(find ~ -path "*/gcp-workshop-tutorial*/summarizer-app" -type d 2>/dev/null | head -1) && echo $APP_DIR
+```
+
+```sh
+cd $APP_DIR
 ```
 
 Dosyalari listeleyin:
@@ -246,7 +248,8 @@ Simdi uygulamayi internete aciyoruz!
 ### Deploy komutunu calistirin
 
 ```sh
-cd $(find ~ -path "*/gcp-workshop-tutorial*/summarizer-app" -type d 2>/dev/null | head -1) && gcloud run deploy youtube-summarizer --source . --region us-central1 --allow-unauthenticated --project $PROJECT_ID
+cd $APP_DIR
+gcloud run deploy youtube-summarizer --source . --region us-central1 --allow-unauthenticated --project $PROJECT_ID
 ```
 
 Ilk seferde "Do you want to continue (Y/n)?" sorusu gelecek — **Y** yazip Enter'a basin.
@@ -268,7 +271,7 @@ Bu URL sizin AI uygulamanizin adresi!
 URL'yi bir degiskene atayin:
 
 ```sh
-SERVICE_URL=$(gcloud run services describe youtube-summarizer --region us-central1 --project $PROJECT_ID --format='value(status.url)') && echo "Uygulama adresiniz: $SERVICE_URL"
+export SERVICE_URL=$(gcloud run services describe youtube-summarizer --region us-central1 --project $PROJECT_ID --format='value(status.url)')
 ```
 
 Ana sayfanin calisiyor mu kontrol edin:
@@ -305,13 +308,13 @@ Workshop bittikten sonra gereksiz ucret olusmamaasi icin kaynaklari temizleyin.
 Cloud Run servisini silin:
 
 ```sh
-gcloud run services delete youtube-summarizer --region us-central1 --project $PROJECT_ID --quiet
+gcloud run services delete youtube-summarizer --region us-central1 --project $PROJECT_ID
 ```
 
 Artifact Registry deposunu silin:
 
 ```sh
-gcloud artifacts repositories delete cloud-run-source-deploy --location=us-central1 --project=$PROJECT_ID --quiet
+gcloud artifacts repositories delete cloud-run-source-deploy --location=us-central1 --project=$PROJECT_ID
 ```
 
 
