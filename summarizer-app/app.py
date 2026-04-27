@@ -82,9 +82,23 @@ Examples:
 - "5+5 kaç eder" → OFFTOPIC"""
 
 if not PROJECT_ID:
-    logger.warning("GOOGLE_CLOUD_PROJECT environment variable is not set.")
+    logger.error(
+        "GOOGLE_CLOUD_PROJECT env var bos! deploy.sh tarafindan set edilmesi gerekiyor. "
+        "Cloud Run servisini --set-env-vars ile yeniden deploy edin."
+    )
 
-vertexai.init(project=PROJECT_ID, location=LOCATION)
+# "global" location bazi vertexai SDK surumlerinde init asamasinda patlayabiliyor.
+# Crash yerine us-central1'e dusup container'i ayakta tutuyoruz.
+try:
+    vertexai.init(project=PROJECT_ID, location=LOCATION)
+except Exception as exc:
+    logger.warning(
+        "vertexai.init basarisiz oldu (location=%s): %s — us-central1'e dusuyorum.",
+        LOCATION, exc,
+    )
+    LOCATION = "us-central1"
+    vertexai.init(project=PROJECT_ID, location=LOCATION)
+logger.info("Vertex AI baslatildi: project=%s location=%s", PROJECT_ID, LOCATION)
 
 YOUTUBE_URL_PATTERN = re.compile(
     r"^https?://(?:www\.|m\.)?(?:youtube\.com/(?:watch\?v=|shorts/|embed/|live/)|youtu\.be/)[\w\-]+",
