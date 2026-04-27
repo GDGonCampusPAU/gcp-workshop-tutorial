@@ -1,4 +1,4 @@
-# sGemini ile YouTube Ozetleyici — Cloud Run Workshop
+# Gemini ile YouTube Ozetleyici — Cloud Run Workshop
 
 Bu tutorial'da Google'in Gemini AI modelini kullanarak YouTube videolarini ozetleyen bir web uygulamasi olusturacak ve Cloud Run'a deploy edeceksiniz.
 
@@ -327,17 +327,25 @@ Tarayicinizda yeni sekme ac ve su adrese git: [console.cloud.google.com/run](htt
 
 Workshop bittikten sonra gereksiz ucret olusmamaasi icin kaynaklari temizleyin.
 
+Once temizlik icin gerekli degiskenleri tanimlayin:
+
+```sh
+export PROJECT_ID=$(gcloud config get-value project)
+export REGION=us-central1
+export SVC=youtube-summarizer
+export REPO=cloud-run-source-deploy
+```
+
 Cloud Run servisini silin:
 
 ```sh
-gcloud run services delete $SVC --region $REGION --project $PROJECT_ID
+gcloud run services delete $SVC --region $REGION --project $PROJECT_ID --quiet
 ```
 
 Artifact Registry deposunu silin:
 
 ```sh
-export REPO=cloud-run-source-deploy
-gcloud artifacts repositories delete $REPO --location=$REGION --project=$PROJECT_ID
+gcloud artifacts repositories delete $REPO --location=$REGION --project=$PROJECT_ID --quiet
 ```
 
 
