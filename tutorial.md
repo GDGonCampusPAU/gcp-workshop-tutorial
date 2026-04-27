@@ -1,4 +1,4 @@
-# Gemini ile YouTube Ozetleyici — Cloud Run Workshop
+# cGemini ile YouTube Ozetleyici — Cloud Run Workshop
 
 Bu tutorial'da Google'in Gemini AI modelini kullanarak YouTube videolarini ozetleyen bir web uygulamasi olusturacak ve Cloud Run'a deploy edeceksiniz.
 
