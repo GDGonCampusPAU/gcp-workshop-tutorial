@@ -1,4 +1,4 @@
-# wGemini ile YouTube Ozetleyici — Cloud Run Workshop
+# sGemini ile YouTube Ozetleyici — Cloud Run Workshop
 
 Bu tutorial'da Google'in Gemini AI modelini kullanarak YouTube videolarini ozetleyen bir web uygulamasi olusturacak ve Cloud Run'a deploy edeceksiniz.
 
@@ -243,9 +243,9 @@ Sol menuden **Credits** sekmesine tiklayin. Size verilen workshop kredisini bura
 
 Budget'i Cloud Console uzerinden olusturun:
 
-Tarayicinizda yeni sekme ac ve su adrese git: [console.cloud.google.com/billing](https://console.cloud.google.com/billing)
+Su adrese git: [console.cloud.google.com/billing/budgets](https://console.cloud.google.com/billing/budgets)
 
-Sol menuden **Budgets & alerts** sekmesine tiklayin, sonra **Create budget** butonuna basin:
+**Create budget** butonuna basin:
 
 1. Name: "Workshop Budget"
 2. Amount: $5
@@ -259,6 +259,14 @@ Sol menuden **Budgets & alerts** sekmesine tiklayin, sonra **Create budget** but
 Simdi uygulamayi internete aciyoruz!
 
 ### Deploy komutunu calistirin
+
+Once deploy scriptini indirin:
+
+```sh
+curl -o deploy.sh "$BASE/$REPO/deploy.sh"
+```
+
+Sonra summarizer-app klasorune gidip scripti calistirin:
 
 ```sh
 cd $APP_DIR
