@@ -13,8 +13,9 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
-# "global" endpoint regional capacity contention'i bypass eder (yeni projelerde 429 onleme).
-LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
+# vertexai 1.71.1 SDK'si "global"'i validate_region listesinde tanimiyor —
+# us-central1 stabil. 429 riskini retry logic absorbe ediyor.
+LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
 DEFAULT_MODEL = "gemini-2.5-flash"
 ALLOWED_MODELS = {"gemini-2.5-flash", "gemini-2.5-pro"}
 MAX_RETRIES = 5
@@ -87,17 +88,7 @@ if not PROJECT_ID:
         "Cloud Run servisini --set-env-vars ile yeniden deploy edin."
     )
 
-# "global" location bazi vertexai SDK surumlerinde init asamasinda patlayabiliyor.
-# Crash yerine us-central1'e dusup container'i ayakta tutuyoruz.
-try:
-    vertexai.init(project=PROJECT_ID, location=LOCATION)
-except Exception as exc:
-    logger.warning(
-        "vertexai.init basarisiz oldu (location=%s): %s — us-central1'e dusuyorum.",
-        LOCATION, exc,
-    )
-    LOCATION = "us-central1"
-    vertexai.init(project=PROJECT_ID, location=LOCATION)
+vertexai.init(project=PROJECT_ID, location=LOCATION)
 logger.info("Vertex AI baslatildi: project=%s location=%s", PROJECT_ID, LOCATION)
 
 YOUTUBE_URL_PATTERN = re.compile(
