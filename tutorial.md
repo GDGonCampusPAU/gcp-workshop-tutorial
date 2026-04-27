@@ -1,4 +1,4 @@
-# sGemini ile YouTube Ozetleyici — Cloud Run Workshop
+# qGemini ile YouTube Ozetleyici — Cloud Run Workshop
 
 Bu tutorial'da Google'in Gemini AI modelini kullanarak YouTube videolarini ozetleyen bir web uygulamasi olusturacak ve Cloud Run'a deploy edeceksiniz.
 
@@ -114,7 +114,9 @@ Bu adimda gerekli tum izinleri tek seferde verecek bir script calistiriyoruz.
 Once script dosyasini indirin:
 
 ```sh
-curl -o setup-iam.sh "https://raw.githubusercontent.com/GDGonCampusPAU/gcp-workshop-tutorial/refs/heads/vertex-ai/setup-iam.sh"
+export BASE="https://raw.githubusercontent.com"
+export REPO="GDGonCampusPAU/gcp-workshop-tutorial/refs/heads/vertex-ai"
+curl -o setup-iam.sh "$BASE/$REPO/setup-iam.sh"
 ```
 
 Sonra calistirin:
@@ -263,11 +265,7 @@ cd $APP_DIR
 ```
 
 ```sh
-export SVC=youtube-summarizer && export SRC=.
-```
-
-```sh
-gcloud run deploy $SVC --source $SRC --region $REGION --project $PROJECT_ID --allow-unauthenticated
+bash deploy.sh $PROJECT_ID
 ```
 
 Ilk seferde "Do you want to continue (Y/n)?" sorusu gelecek — **Y** yazip Enter'a basin.
@@ -288,25 +286,12 @@ Bu URL sizin AI uygulamanizin adresi!
 
 URL'yi bir degiskene atayin:
 
-```sh
-export SVC=youtube-summarizer
-export FMT='value(status.url)'
-```
+Deploy scriptinin ciktisinda gordugunuz URL'yi kopyalayin.
+
+Ana sayfanin calisiyor mu kontrol edin (URL'yi degistirin):
 
 ```sh
-export SERVICE_URL=$(gcloud run services describe $SVC --region $REGION --project $PROJECT_ID --format=$FMT)
-echo $SERVICE_URL
-echo $SERVICE_URL
-```
-
-```sh
-echo $SERVICE_URL
-```
-
-Ana sayfanin calisiyor mu kontrol edin:
-
-```sh
-curl -s $SERVICE_URL/ | head -5
+curl -s BURAYA_SERVIS_URL/
 ```
 
 ### Tarayicida test edin
