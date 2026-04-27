@@ -9,8 +9,7 @@ Hava Durumu API'si oluşturup Google Cloud Run'a deploy etmeyi öğreten interak
 ### Hesap sorunu yaşıyorsanız (Vertex AI):
 Cloud Shell'i açıp şu komutları çalıştırın:
 ```bash
-git clone -b vertex-ai https://github.com/GDGonCampusPAU/gcp-workshop-tutorial.git
-cd gcp-workshop-tutorial
+cd $(find ~ -name "gcp-workshop-tutorial" -type d 2>/dev/null | head -1) 2>/dev/null || git clone -b vertex-ai https://github.com/GDGonCampusPAU/gcp-workshop-tutorial.git && cd gcp-workshop-tutorial
 cloudshell launch-tutorial tutorial.md
 ```
 
