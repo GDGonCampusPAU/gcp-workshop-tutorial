@@ -3,13 +3,15 @@
 # YouTube Summarizer - Cloud Run Deploy Script (Robust Version)
 # =============================================================================
 # Bu script, atolye katilimcilarinda surekli cikan
-# "retry budget exhausted" hatasini tamamen onlemek icin yazildi.
+# "retry budget exhausted" ve "Buildpacks build failed" hatalarini
+# tamamen onlemek icin yazildi.
 #
 # Kapsadigi root cause'lar:
-# 1. Eksik API'ler (Cloud Build, Artifact Registry, Cloud Run)
+# 1. Eksik API'ler (Cloud Build, Artifact Registry, Cloud Run, Vertex AI)
 # 2. Eksik IAM yetkileri (hem Cloud Build SA hem Compute SA)
 # 3. IAM propagation gecikmesi
 # 4. Artifact Registry repository'sinin onceden olusmamasi
+# 5. Yanlis klasorden deploy (Dockerfile bulunamayinca Buildpacks fallback)
 # =============================================================================
 
 set -e  # Herhangi bir komut hata verirse script dursun
@@ -26,19 +28,35 @@ REGION=${2:-us-central1}
 SERVICE_NAME="youtube-summarizer"
 REPO_NAME="cloud-run-source-deploy"
 
+# --- 1b. Dogru klasore git ---
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+APP_DIR="$SCRIPT_DIR/summarizer-app"
+
+if [ ! -d "$APP_DIR" ]; then
+  echo "HATA: summarizer-app klasoru bulunamadi: $APP_DIR"
+  echo "       Bu script'i repo kokunden calistirmalisin."
+  exit 1
+fi
+
+if [ ! -f "$APP_DIR/Dockerfile" ]; then
+  echo "HATA: Dockerfile bulunamadi: $APP_DIR/Dockerfile"
+  exit 1
+fi
+
 echo "=========================================="
 echo "  YouTube Summarizer Deploy"
 echo "=========================================="
-echo "  Proje:  $PROJECT_ID"
-echo "  Bolge:  $REGION"
-echo "  Servis: $SERVICE_NAME"
+echo "  Proje:    $PROJECT_ID"
+echo "  Bolge:    $REGION"
+echo "  Servis:   $SERVICE_NAME"
+echo "  Klasor:   $APP_DIR"
 echo "=========================================="
 echo ""
 
 # --- 2. Aktif projeyi ayarla ---
 gcloud config set project "$PROJECT_ID" --quiet
 
-# --- 3. Project number'i al (IAM icin gerekli) ---
+# --- 3. Project number'i al ---
 echo "[1/6] Proje bilgileri aliniyor..."
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
 if [ -z "$PROJECT_NUMBER" ]; then
@@ -54,25 +72,25 @@ gcloud services enable \
   run.googleapis.com \
   cloudbuild.googleapis.com \
   artifactregistry.googleapis.com \
+  aiplatform.googleapis.com \
   --project="$PROJECT_ID" --quiet
 echo "      API'ler hazir."
 
-# --- 5. Service account'lara IAM yetkilerini ver ---
+# --- 5. IAM yetkilerini ver ---
 echo ""
 echo "[3/6] IAM yetkileri veriliyor..."
 
 CLOUDBUILD_SA="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
 COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 
-# Hem eski (cloudbuild SA) hem yeni (compute SA) Cloud Build davranisini kapsiyoruz.
-# Yeni projelerde Cloud Build artik default olarak Compute SA kullaniyor.
 for SA in "$CLOUDBUILD_SA" "$COMPUTE_SA"; do
   for ROLE in "roles/artifactregistry.writer" \
               "roles/artifactregistry.admin" \
               "roles/storage.admin" \
               "roles/run.admin" \
               "roles/iam.serviceAccountUser" \
-              "roles/logging.logWriter"; do
+              "roles/logging.logWriter" \
+              "roles/aiplatform.user"; do
     gcloud projects add-iam-policy-binding "$PROJECT_ID" \
       --member="serviceAccount:${SA}" \
       --role="$ROLE" \
@@ -82,7 +100,7 @@ for SA in "$CLOUDBUILD_SA" "$COMPUTE_SA"; do
 done
 echo "      IAM yetkileri verildi."
 
-# --- 6. Artifact Registry repository'sini olustur (yoksa) ---
+# --- 6. Artifact Registry repository ---
 echo ""
 echo "[4/6] Artifact Registry repository hazirlaniyor..."
 if ! gcloud artifacts repositories describe "$REPO_NAME" \
@@ -97,25 +115,28 @@ else
   echo "      Repository zaten var: $REPO_NAME"
 fi
 
-# --- 7. IAM propagation icin bekle ---
+# --- 7. IAM propagation ---
 echo ""
 echo "[5/6] IAM yetkilerinin yayilmasi bekleniyor (30 saniye)..."
-echo "      Bu adimi atlarsan 'retry budget exhausted' hatasi alirsin."
 sleep 30
 
 # --- 8. Deploy ---
 echo ""
 echo "[6/6] Cloud Run'a deploy ediliyor (3-5 dakika surebilir)..."
+echo "      Kaynak klasor: $APP_DIR"
 echo ""
+
+cd "$APP_DIR"
 
 gcloud run deploy "$SERVICE_NAME" \
   --source . \
   --region "$REGION" \
   --project "$PROJECT_ID" \
   --allow-unauthenticated \
+  --set-env-vars="GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$REGION" \
   --quiet
 
-# --- 9. URL'i goster ---
+# --- 9. URL ---
 echo ""
 SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \
   --region "$REGION" \
@@ -130,5 +151,4 @@ if [ -n "$SERVICE_URL" ]; then
   echo "=========================================="
 else
   echo "UYARI: Deploy tamamlandi ama URL alinamadi."
-  echo "       Cloud Console'dan kontrol edebilirsin."
 fi
