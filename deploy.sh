@@ -32,10 +32,15 @@ gcloud run deploy youtube-summarizer \
   --project $PROJECT_ID \
   --allow-unauthenticated
 
-echo ""
-echo "Deploy tamamlandi!"
-echo "Servis URL:"
-gcloud run services describe youtube-summarizer \
-  --region us-central1 \
-  --project $PROJECT_ID \
-  --format='value(status.url)'
+if [ $? -eq 0 ]; then
+  echo ""
+  echo "Deploy tamamlandi!"
+  echo "Servis URL:"
+  gcloud run services describe youtube-summarizer \
+    --region us-central1 \
+    --project $PROJECT_ID \
+    --format='value(status.url)'
+else
+  echo ""
+  echo "Deploy basarisiz oldu. Loglari kontrol edin."
+fi
