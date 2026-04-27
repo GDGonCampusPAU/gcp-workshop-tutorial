@@ -101,9 +101,3 @@ Workshop yoğun saatlerde geçici olabilir. Uygulama otomatik olarak **5 kez tek
 ## 🧹 Workshop sonunda
 
 Tutorial'ın **Temizlik** adımındaki komutları **mutlaka çalıştırın** — Cloud Run servisi ve Artifact Registry repo'su silinir, sonraki günlerde gereksiz ücret oluşmaz. Workshop kredinizin geri kalanı diğer projelerinizde kullanılabilir.
-
----
-
-## 📞 Destek
-
-Workshop sırasında takıldığınız bir nokta olursa GDG on Campus PAÜ ekibinden yardım isteyin — yanınızdaki eğitmen size eşlik etmek için orada.
