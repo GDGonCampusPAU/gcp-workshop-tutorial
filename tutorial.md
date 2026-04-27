@@ -25,21 +25,11 @@ API'leri etkinlestirebilmek icin projenize bir billing hesabi baglanmis olmali. 
 
 ### Proje ID'nizi terminale baglayin
 
-Once proje ID'nizi Cloud Shell'e baglayin. Proje ID'nizi bulmak icin: [console.cloud.google.com](https://console.cloud.google.com) adresine gidin, sol ust kosedeki proje adina tiklayin, acilan pencerede projenizin ID'sini kopyalayin.
-
-Asagidaki komutu calistirin, `PROJE_ID_BURAYA` kismini kopyaladiginiz ID ile degistirin:
-
-```sh
-gcloud config set project PROJE_ID_BURAYA
-```
-
-Dogru projeye baglandiginizi dogrulayin:
-
 ```sh
 export PROJECT_ID=$(gcloud config get-value project) && echo "Proje: $PROJECT_ID"
 ```
 
-Proje ID'nizi gormelisiniz. `(unset)` goruyorsaniz yukaridaki komutu tekrar calistirin.
+Proje ID'nizi gormelisiniz. `(unset)` goruyorsaniz onceki adima donup projenizi secin ve START'a basin.
 
 ### Billing hesabini baglayin
 
