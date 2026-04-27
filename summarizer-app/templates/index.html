@@ -239,13 +239,15 @@
 
                     <!-- Additional Prompt -->
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">Custom System Instructions (Optional)</label>
-                        <textarea 
-                            name="additional_prompt" 
+                        <label class="block text-sm font-medium text-gray-700">Custom Instructions (Optional)</label>
+                        <textarea
+                            name="additional_prompt"
                             rows="4"
-                            placeholder="Example: 'Summarize as a technical blog post' or 'Explain like I'm a cloud architect'"
+                            maxlength="1000"
+                            placeholder="Örnek: 'Türkçe özetle', 'madde madde anlat', 'ana fikirleri listele'"
                             class="input-field w-full px-4 py-3 rounded-md resize-none"
                         ></textarea>
+                        <p class="text-xs text-gray-500">Sadece video özetleme talepleri kabul edilir (en fazla 1000 karakter).</p>
                     </div>
 
                     <!-- Submit Button -->
