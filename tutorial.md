@@ -1,4 +1,4 @@
-# Gemini ile YouTube Ozetleyici — Cloud Run Workshop
+# aGemini ile YouTube Ozetleyici — Cloud Run Workshop
 
 Bu tutorial'da Google'in Gemini AI modelini kullanarak YouTube videolarini ozetleyen bir web uygulamasi olusturacak ve Cloud Run'a deploy edeceksiniz.
 
@@ -51,7 +51,7 @@ Proje ID'nizi gormelisiniz. Bos geliyorsa onceki adima donup tekrar deneyin.
 
 Billing sayfasina gidin:
 
-<walkthrough-menu-navigation sectionId="BILLING_SECTION"></walkthrough-menu-navigation>
+Tarayicinizda yeni sekme ac ve su adrese git: [console.cloud.google.com/billing](https://console.cloud.google.com/billing)
 
 **Your projects** sekmesine tiklayin, projenizi bulun ve **Actions (3 nokta)** → **Change billing** secin. Acilan listeden workshop kredinizin bulundugu billing hesabini secin ve **Set account** butonuna basin.
 
@@ -67,7 +67,17 @@ gcloud billing projects describe $PROJECT_ID --format="value(billingEnabled)"
 
 Bu projede hem AI hem de deploy hizmetlerini kullanacagiz. Asagidaki butona tiklayarak hepsini bir seferde etkinlestirin:
 
-<walkthrough-enable-apis apis="run.googleapis.com,cloudbuild.googleapis.com,cloudresourcemanager.googleapis.com,artifactregistry.googleapis.com,aiplatform.googleapis.com"></walkthrough-enable-apis>
+```sh
+gcloud services enable run.googleapis.com cloudbuild.googleapis.com
+```
+
+```sh
+gcloud services enable artifactregistry.googleapis.com aiplatform.googleapis.com
+```
+
+```sh
+gcloud services enable cloudresourcemanager.googleapis.com
+```
 
 **Ne etkinlestirdik?**
 
@@ -104,7 +114,7 @@ Bu adimda gerekli tum izinleri tek seferde verecek bir script calistiriyoruz.
 Once script dosyasini indirin:
 
 ```sh
-curl -o setup-iam.sh https://raw.githubusercontent.com/GDGonCampusPAU/gcp-workshop-tutorial/vertex-ai/setup-iam.sh
+curl -o setup-iam.sh "https://tinyurl.com/gcp-setup-iam"
 ```
 
 Sonra calistirin:
@@ -134,7 +144,8 @@ Vertex AI, Google'in kurumsal AI platformudur. Her Gemini cagrisi dogrudan GCP k
 Uygulama dosyalari GitHub'da hazir bekliyor.
 
 ```sh
-export APP_DIR=$(find ~ -path "*/gcp-workshop-tutorial*/summarizer-app" -type d 2>/dev/null | head -1) && echo $APP_DIR
+export APP_DIR=$(find ~ -name "summarizer-app" -type d 2>/dev/null | head -1)
+echo $APP_DIR
 ```
 
 ```sh
@@ -222,7 +233,7 @@ Workshop'ta size verilen krediyi bu projede kullanacaksiniz. Deploy etmeden once
 
 Billing sayfasina gidin:
 
-<walkthrough-menu-navigation sectionId="BILLING_SECTION"></walkthrough-menu-navigation>
+Tarayicinizda yeni sekme ac ve su adrese git: [console.cloud.google.com/billing](https://console.cloud.google.com/billing)
 
 Sol menuden **Credits** sekmesine tiklayin. Size verilen workshop kredisini burada gormelisiniz.
 
@@ -230,7 +241,7 @@ Sol menuden **Credits** sekmesine tiklayin. Size verilen workshop kredisini bura
 
 Budget'i Cloud Console uzerinden olusturun:
 
-<walkthrough-menu-navigation sectionId="BILLING_SECTION"></walkthrough-menu-navigation>
+Tarayicinizda yeni sekme ac ve su adrese git: [console.cloud.google.com/billing](https://console.cloud.google.com/billing)
 
 Sol menuden **Budgets & alerts** sekmesine tiklayin, sonra **Create budget** butonuna basin:
 
@@ -249,7 +260,14 @@ Simdi uygulamayi internete aciyoruz!
 
 ```sh
 cd $APP_DIR
-gcloud run deploy youtube-summarizer --source . --region us-central1 --allow-unauthenticated --project $PROJECT_ID
+```
+
+```sh
+export SVC=youtube-summarizer && export SRC=.
+```
+
+```sh
+gcloud run deploy $SVC --source $SRC --region $REGION --project $PROJECT_ID --allow-unauthenticated
 ```
 
 Ilk seferde "Do you want to continue (Y/n)?" sorusu gelecek — **Y** yazip Enter'a basin.
@@ -271,7 +289,18 @@ Bu URL sizin AI uygulamanizin adresi!
 URL'yi bir degiskene atayin:
 
 ```sh
-export SERVICE_URL=$(gcloud run services describe youtube-summarizer --region us-central1 --project $PROJECT_ID --format='value(status.url)')
+export SVC=youtube-summarizer
+export FMT='value(status.url)'
+```
+
+```sh
+export SERVICE_URL=$(gcloud run services describe $SVC --region $REGION --project $PROJECT_ID --format=$FMT)
+echo $SERVICE_URL
+echo $SERVICE_URL
+```
+
+```sh
+echo $SERVICE_URL
 ```
 
 Ana sayfanin calisiyor mu kontrol edin:
@@ -293,7 +322,7 @@ URL'yi kopyalayip tarayicinizin adres cubuguna yapistirin.
 
 Deploy ettigimiz servisi goruntusel arayuzden inceleyelim.
 
-<walkthrough-menu-navigation sectionId="CLOUD_RUN_SECTION"></walkthrough-menu-navigation>
+Tarayicinizda yeni sekme ac ve su adrese git: [console.cloud.google.com/run](https://console.cloud.google.com/run)
 
 `youtube-summarizer` servisine tiklayip su sekmeleri inceleyin:
 
@@ -308,13 +337,14 @@ Workshop bittikten sonra gereksiz ucret olusmamaasi icin kaynaklari temizleyin.
 Cloud Run servisini silin:
 
 ```sh
-gcloud run services delete youtube-summarizer --region us-central1 --project $PROJECT_ID
+gcloud run services delete $SVC --region $REGION --project $PROJECT_ID
 ```
 
 Artifact Registry deposunu silin:
 
 ```sh
-gcloud artifacts repositories delete cloud-run-source-deploy --location=us-central1 --project=$PROJECT_ID
+export REPO=cloud-run-source-deploy
+gcloud artifacts repositories delete $REPO --location=$REGION --project=$PROJECT_ID
 ```
 
 
@@ -330,7 +360,7 @@ Servisleri sildikten sonra bu projenin toplam ne kadara mal oldugunu goreceğiz.
 
 ### Billing Reports sayfasina gidin
 
-<walkthrough-menu-navigation sectionId="BILLING_SECTION"></walkthrough-menu-navigation>
+Tarayicinizda yeni sekme ac ve su adrese git: [console.cloud.google.com/billing](https://console.cloud.google.com/billing)
 
 Sol menuden **Reports** sekmesine tiklayin.
 
