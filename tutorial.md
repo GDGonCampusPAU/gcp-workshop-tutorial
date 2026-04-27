@@ -1,4 +1,4 @@
-# aGemini ile YouTube Ozetleyici — Cloud Run Workshop
+# sGemini ile YouTube Ozetleyici — Cloud Run Workshop
 
 Bu tutorial'da Google'in Gemini AI modelini kullanarak YouTube videolarini ozetleyen bir web uygulamasi olusturacak ve Cloud Run'a deploy edeceksiniz.
 
@@ -114,7 +114,7 @@ Bu adimda gerekli tum izinleri tek seferde verecek bir script calistiriyoruz.
 Once script dosyasini indirin:
 
 ```sh
-curl -o setup-iam.sh "https://tinyurl.com/gcp-setup-iam"
+curl -o setup-iam.sh "https://raw.githubusercontent.com/GDGonCampusPAU/gcp-workshop-tutorial/refs/heads/vertex-ai/setup-iam.sh"
 ```
 
 Sonra calistirin:
