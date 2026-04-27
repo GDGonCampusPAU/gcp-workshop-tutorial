@@ -12,6 +12,20 @@ fi
 echo "Deploy basliyor... Proje: $PROJECT_ID"
 echo "Bu adim 3-5 dakika surebilir."
 
+# Gerekli izinleri ver (daha once verilmisse hata vermez)
+echo "Izinler kontrol ediliyor..."
+PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+  --role="roles/storage.admin" --quiet 2>/dev/null
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+  --role="roles/artifactregistry.writer" --quiet 2>/dev/null
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+  --role="roles/run.admin" --quiet 2>/dev/null
+echo "Izinler tamam!"
+
 gcloud run deploy youtube-summarizer \
   --source . \
   --region us-central1 \
