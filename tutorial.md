@@ -201,7 +201,7 @@ cat templates/index.html
 Kullanicidan iki sey aliyor:
 
 - **YouTube URL** — Ozetlenecek videonun linki
-- **Custom Instructions** (opsiyonel) — "Summarize in Turkish" veya "List key points" gibi ozel talimatlar
+- **Ozet Tipi** — Hizli (2-3 cumle), Detayli (ana noktalar), Genis (kapsamli analiz) seceneklerinden biri
 
 ## Vertex AI ve Gemini Nedir?
 
@@ -296,7 +296,7 @@ curl -s BURAYA_SERVIS_URL/
 URL'yi kopyalayip tarayicinizin adres cubuguna yapistirin.
 
 1. **Public** bir YouTube video URL'si yapistirin (test icin: `https://www.youtube.com/watch?v=jNQXAC9IVRw`)
-2. Opsiyonel: Custom Instructions girin — ornegin "Summarize in Turkish, use bullet points"
+2. **Ozet Tipi** secin: Hizli / Detayli / Genis (varsayilan: Detayli)
 3. **Summarize Content** butonuna basin
 4. Gemini birkaç saniye icinde ozeti uretecek!
 
@@ -385,10 +385,10 @@ Gercek bir AI uygulamasi olusturup internete deploy ettiniz!
 
 ### Challenge
 
-Kendi basiniza deneyin: Custom Instructions kutusuna farkli diller ve formatlar deneyin:
-- "Summarize in Turkish using bullet points"
-- "Extract only the key statistics mentioned"
-- "Write a tweet-sized summary"
+Kendi basiniza deneyin:
+- Ayni videoyu **Hizli**, **Detayli** ve **Genis** modlarda ozetletip ciktilarin nasil farklilastigini gorun
+- Farkli turlerde (haber, egitim, vlog, teknik anlatim) videolar deneyin
+- `app.py`'deki `SUMMARY_PROMPTS` sozlugunu degistirip kendi 4. ozet tipinizi ekleyin (orn. "soru-cevap formatinda")
 
 ### Faydali linkler
 

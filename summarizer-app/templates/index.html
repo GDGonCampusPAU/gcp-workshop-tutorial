@@ -237,17 +237,37 @@
                         </div>
                     </div>
 
-                    <!-- Additional Prompt -->
+                    <!-- Summary Type -->
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">Custom Instructions (Optional)</label>
-                        <textarea
-                            name="additional_prompt"
-                            rows="4"
-                            maxlength="1000"
-                            placeholder="Örnek: 'Türkçe özetle', 'madde madde anlat', 'ana fikirleri listele'"
-                            class="input-field w-full px-4 py-3 rounded-md resize-none"
-                        ></textarea>
-                        <p class="text-xs text-gray-500">Sadece video özetleme talepleri kabul edilir (en fazla 1000 karakter).</p>
+                        <label class="block text-sm font-medium text-gray-700 text-blue-600 flex items-center gap-1">
+                            <i data-lucide="list" class="w-4 h-4"></i> Özet Tipi
+                        </label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="cursor-pointer rounded-md border border-gray-300 p-3 transition has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:ring-2 has-[:checked]:ring-blue-200 hover:bg-gray-50">
+                                <input type="radio" name="summary_type" value="quick" class="sr-only">
+                                <div class="flex flex-col items-center gap-1 text-center">
+                                    <i data-lucide="zap" class="w-5 h-5 text-yellow-500"></i>
+                                    <div class="font-medium text-sm">Hızlı</div>
+                                    <div class="text-xs text-gray-500">2-3 cümle</div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer rounded-md border border-gray-300 p-3 transition has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:ring-2 has-[:checked]:ring-blue-200 hover:bg-gray-50">
+                                <input type="radio" name="summary_type" value="detailed" class="sr-only" checked>
+                                <div class="flex flex-col items-center gap-1 text-center">
+                                    <i data-lucide="file-text" class="w-5 h-5 text-blue-500"></i>
+                                    <div class="font-medium text-sm">Detaylı</div>
+                                    <div class="text-xs text-gray-500">Ana noktalar</div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer rounded-md border border-gray-300 p-3 transition has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:ring-2 has-[:checked]:ring-blue-200 hover:bg-gray-50">
+                                <input type="radio" name="summary_type" value="broad" class="sr-only">
+                                <div class="flex flex-col items-center gap-1 text-center">
+                                    <i data-lucide="layers" class="w-5 h-5 text-green-500"></i>
+                                    <div class="font-medium text-sm">Geniş</div>
+                                    <div class="text-xs text-gray-500">Kapsamlı analiz</div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Submit Button -->
