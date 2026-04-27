@@ -4,7 +4,7 @@ Gemini AI ile YouTube videolarını özetleyen uygulama oluşturup Google Cloud 
 
 ## Başlatmak için:
 
-[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/open?git_repo=https://github.com/GDGonCampusPAU/gcp-workshop-tutorial&tutorial=tutorial.md&cloudshell_git_branch=vertex-ai)
+[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/open?git_repo=https://github.com/GDGonCampusPAU/gcp-workshop-tutorial&tutorial=tutorial.md&cloudshell_git_branch=fix/workshop-hardening)
 
 ### Hesap sorunu yaşıyorsanız:
 
