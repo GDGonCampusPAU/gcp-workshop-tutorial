@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect
 import vertexai
-from vertexai.generative_models import GenerativeModel
+from vertexai.generative_models import GenerativeModel, Part
 
 app = Flask(__name__)
 
@@ -17,9 +17,10 @@ def index():
 
 def generate(youtube_link, additional_prompt):
     if not additional_prompt:
-        additional_prompt = ""
-    prompt = f"Please summarize this YouTube video: {youtube_link}\n{additional_prompt}"
-    response = model.generate_content(prompt)
+        additional_prompt = "Please provide a detailed summary."
+    video_part = Part.from_uri(uri=youtube_link, mime_type="video/*")
+    contents = [video_part, additional_prompt]
+    response = model.generate_content(contents)
     return response.text
 
 @app.route("/summarize", methods=["GET", "POST"])
