@@ -8,12 +8,21 @@ Gemini AI ile YouTube videolarını özetleyen uygulama oluşturup Google Cloud 
 
 ### Hesap sorunu yaşıyorsanız:
 
-Cloud Shell'i açıp şu komutları çalıştırın:
+Cloud Shell'i açıp şu komutları sırayla çalıştırın:
 
 ```bash
-cd $(find ~ -name "gcp-workshop-tutorial" -type d 2>/dev/null | head -1) 2>/dev/null || git clone -b vertex-ai https://github.com/GDGonCampusPAU/gcp-workshop-tutorial.git && cd gcp-workshop-tutorial
-cloudshell launch-tutorial tutorial.md
+git clone -b vertex-ai https://github.com/GDGonCampusPAU/gcp-workshop-tutorial.git
 ```
+
+```bash
+cloudshell launch-tutorial ~/gcp-workshop-tutorial/tutorial.md
+```
+Already Exists Hatası Alırsanız:
+
+```bash
+rm -rf ~/gcp-workshop-tutorial && git clone -b vertex-ai https://github.com/GDGonCampusPAU/gcp-workshop-tutorial.git && cloudshell launch-tutorial ~/gcp-workshop-tutorial/tutorial.md
+```
+
 
 ## Ne Öğreneceksiniz?
 
