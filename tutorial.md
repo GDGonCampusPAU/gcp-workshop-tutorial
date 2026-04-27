@@ -216,8 +216,9 @@ Bu projede kullandigimiz en onemli kavram Gemini API.
 import vertexai
 from vertexai.generative_models import GenerativeModel
 
-# Vertex AI baslat (proje ID otomatik okunur)
-vertexai.init(project=PROJECT_ID, location="us-central1")
+# Vertex AI baslat — "global" endpoint kapasite havuzunu genisletir
+# (yeni projelerde 429 / Resource exhausted hatalarini onler).
+vertexai.init(project=PROJECT_ID, location="global")
 
 # Modeli sec
 model = GenerativeModel("gemini-2.5-flash")

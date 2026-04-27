@@ -11,17 +11,28 @@ Gemini AI ile YouTube videolarını özetleyen uygulama oluşturup Google Cloud 
 Cloud Shell'i açıp şu komutları sırayla çalıştırın:
 
 ```bash
-git clone -b vertex-ai https://github.com/GDGonCampusPAU/gcp-workshop-tutorial.git
+git clone -b fix/workshop-hardening https://github.com/GDGonCampusPAU/gcp-workshop-tutorial.git
 ```
 
 ```bash
 cloudshell launch-tutorial ~/gcp-workshop-tutorial/tutorial.md
 ```
-Already Exists Hatası Alırsanız:
+
+**Already Exists** hatası alırsanız:
 
 ```bash
-rm -rf ~/gcp-workshop-tutorial && git clone -b vertex-ai https://github.com/GDGonCampusPAU/gcp-workshop-tutorial.git && cloudshell launch-tutorial ~/gcp-workshop-tutorial/tutorial.md
+rm -rf ~/gcp-workshop-tutorial && git clone -b fix/workshop-hardening https://github.com/GDGonCampusPAU/gcp-workshop-tutorial.git && cloudshell launch-tutorial ~/gcp-workshop-tutorial/tutorial.md
 ```
+
+### Workshop sırasında "No such file or directory" / "deploy.sh bulunamadı" hatası alırsanız:
+
+Cloud Shell daha önce bu repo'dan eski bir kopya çekmiş olabilir. Tek seferde temizleyip sıfırlayan komut:
+
+```bash
+rm -rf ~/cloudshell_open/gcp-workshop-tutorial* ~/gcp-workshop-tutorial && git clone -b fix/workshop-hardening https://github.com/GDGonCampusPAU/gcp-workshop-tutorial.git && cloudshell launch-tutorial ~/gcp-workshop-tutorial/tutorial.md
+```
+
+Sonra tutorial'ı baştan **Proje Seçimi** adımıyla başlatın.
 
 
 ## Ne Öğreneceksiniz?

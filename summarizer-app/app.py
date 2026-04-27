@@ -1,5 +1,7 @@
 import os
 import re
+import time
+import random
 import logging
 from flask import Flask, render_template, request, redirect
 import vertexai
@@ -11,9 +13,11 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
-LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+# "global" endpoint regional capacity contention'i bypass eder (yeni projelerde 429 onleme).
+LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
 DEFAULT_MODEL = "gemini-2.5-flash"
 ALLOWED_MODELS = {"gemini-2.5-flash", "gemini-2.5-pro"}
+MAX_RETRIES = 5
 
 if not PROJECT_ID:
     logger.warning("GOOGLE_CLOUD_PROJECT environment variable is not set.")
@@ -35,6 +39,18 @@ def index():
     return render_template("index.html")
 
 
+def _is_retryable(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return (
+        "429" in msg
+        or "resource exhausted" in msg
+        or "resource_exhausted" in msg
+        or "rate" in msg and "limit" in msg
+        or "503" in msg
+        or "unavailable" in msg
+    )
+
+
 def generate(youtube_link: str, additional_prompt: str, model_name: str) -> str:
     if model_name not in ALLOWED_MODELS:
         model_name = DEFAULT_MODEL
@@ -45,8 +61,22 @@ def generate(youtube_link: str, additional_prompt: str, model_name: str) -> str:
     model = GenerativeModel(model_name)
     video_part = Part.from_uri(uri=youtube_link, mime_type="video/mp4")
     contents = [video_part, additional_prompt]
-    response = model.generate_content(contents)
-    return response.text
+
+    # 429/503 icin truncated exponential backoff + jitter — workshop'ta kapasite tikanmasini gizler
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = model.generate_content(contents)
+            return response.text
+        except Exception as exc:
+            if attempt == MAX_RETRIES - 1 or not _is_retryable(exc):
+                raise
+            wait = min(2 ** attempt, 16) + random.uniform(0, 1)
+            logger.warning(
+                "Vertex AI retry %d/%d after %.1fs (reason: %s)",
+                attempt + 1, MAX_RETRIES, wait, str(exc).splitlines()[0][:200],
+            )
+            time.sleep(wait)
+    raise RuntimeError("generate(): unreachable")
 
 
 @app.route("/summarize", methods=["GET", "POST"])
@@ -65,7 +95,13 @@ def summarize():
         return generate(youtube_link, additional_prompt, model_name)
     except Exception as e:
         logger.exception("Summarization failed")
-        return f"Error: {str(e)}", 500
+        if _is_retryable(e):
+            return (
+                "Vertex AI suan yogun (kapasite gecici dolu). "
+                "Lutfen 10-20 saniye bekleyip 'Summarize Content' butonuna tekrar basin.",
+                503,
+            )
+        return f"Hata: {str(e)}", 500
 
 
 @app.route("/healthz", methods=["GET"])
