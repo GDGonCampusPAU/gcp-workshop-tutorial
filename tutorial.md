@@ -13,23 +13,31 @@ Baslamak icin **Start** butonuna tiklayin.
 
 ## Proje Secimi
 
-Oncelikle bu tutorial icin kullanacaginiz Google Cloud projesini secin.
+Once mevcut projelerinizi listeleyin:
 
-<walkthrough-project-setup billing="true"></walkthrough-project-setup>
+```sh
+gcloud projects list
+```
 
-Proje hazir oldugunda **Next** butonuna basin.
+Listeden kullanacaginiz projenin **PROJECT_ID** sutunundaki degeri kopyalayin. Sonra asagidaki komutu calistirin, `PROJE_ID_BURAYA` kismini degistirin:
+
+```sh
+gcloud config set project PROJE_ID_BURAYA && export PROJECT_ID=$(gcloud config get-value project) && echo "Aktif proje: $PROJECT_ID"
+```
+
+Proje ID'nizi gormelisiniz. Dogru projeyi goruyorsaniz **Next** butonuna basin.
 
 ## Billing Hesabini Baglama
 
 API'leri etkinlestirebilmek icin projenize bir billing hesabi baglanmis olmali. Kredi bu billing hesabinda olacak.
 
-### Proje ID'nizi terminale baglayin
+### Proje ID'nizi dogrulayin
 
 ```sh
-export PROJECT_ID=$(gcloud config get-value project) && echo "Proje: $PROJECT_ID"
+echo "Aktif proje: $PROJECT_ID"
 ```
 
-Proje ID'nizi gormelisiniz. `(unset)` goruyorsaniz onceki adima donup projenizi secin ve START'a basin.
+Proje ID'nizi gormelisiniz. Bos geliyorsa onceki adima donup tekrar deneyin.
 
 ### Billing hesabini baglayin
 
