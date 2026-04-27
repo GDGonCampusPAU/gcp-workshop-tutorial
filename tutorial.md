@@ -22,7 +22,11 @@ gcloud projects list
 Listeden kullanacaginiz projenin **PROJECT_ID** sutunundaki degeri kopyalayin. Sonra asagidaki komutu calistirin, `PROJE_ID_BURAYA` kismini degistirin:
 
 ```sh
-gcloud config set project PROJE_ID_BURAYA && export PROJECT_ID=$(gcloud config get-value project) && echo "Aktif proje: $PROJECT_ID"
+gcloud config set project PROJE_ID_BURAYA
+```
+
+```sh
+export PROJECT_ID=$(gcloud config get-value project) && echo "Aktif proje: $PROJECT_ID"
 ```
 
 Proje ID'nizi gormelisiniz. Dogru projeyi goruyorsaniz **Next** butonuna basin.
