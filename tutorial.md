@@ -1,0 +1,397 @@
+# cGemini ile YouTube Ozetleyici — Cloud Run Workshop
+
+Bu tutorial'da Google'in Gemini AI modelini kullanarak YouTube videolarini ozetleyen bir web uygulamasi olusturacak ve Cloud Run'a deploy edeceksiniz.
+
+**Tahmini sure:** 45-60 dakika
+**Maliyet:** Workshop kredisi kullanilir (Vertex AI token bazli ucretlendirme)
+
+Baslamak icin **Start** butonuna tiklayin.
+
+> **Onemli:** Tutorial paneli yuklenmiyorsa VPN'inizi kapatin ve tekrar deneyin.
+> 
+> **Hesap:** Bu linke tıklamadan once workshop icin kullanacaginiz Google hesabiyla [console.cloud.google.com](https://console.cloud.google.com) adresine giris yaptiginizdan emin olun.
+
+## Proje Secimi
+
+Once mevcut projelerinizi listeleyin:
+
+```sh
+gcloud projects list
+```
+
+Listeden kullanacaginiz projenin **PROJECT_ID** sutunundaki degeri kopyalayin. Sonra asagidaki komutu calistirin, `PROJE_ID_BURAYA` kismini degistirin:
+
+```sh
+gcloud config set project PROJE_ID_BURAYA
+```
+
+```sh
+export PROJECT_ID=$(gcloud config get-value project)
+```
+
+```sh
+echo "Aktif proje: $PROJECT_ID"
+```
+
+Proje ID'nizi gormelisiniz. Dogru projeyi goruyorsaniz **Next** butonuna basin.
+
+## Billing Hesabini Baglama
+
+API'leri etkinlestirebilmek icin projenize bir billing hesabi baglanmis olmali. Kredi bu billing hesabinda olacak.
+
+### Proje ID'nizi dogrulayin
+
+```sh
+echo "Aktif proje: $PROJECT_ID"
+```
+
+Proje ID'nizi gormelisiniz. Bos geliyorsa onceki adima donup tekrar deneyin.
+
+### Billing hesabini baglayin
+
+Billing sayfasina gidin:
+
+Tarayicinizda yeni sekme ac ve su adrese git: [console.cloud.google.com/billing](https://console.cloud.google.com/billing)
+
+**Your projects** sekmesine tiklayin, projenizi bulun ve **Actions (3 nokta)** → **Change billing** secin. Acilan listeden workshop kredinizin bulundugu billing hesabini secin ve **Set account** butonuna basin.
+
+Sonra terminalde billing'in aktif oldugunu dogrulayin:
+
+```sh
+gcloud billing projects describe $PROJECT_ID --format="value(billingEnabled)"
+```
+
+`billingEnabled: true` gormelisiniz. Gormuyorsaniz billing baglamayi tekrar deneyin.
+
+## Gerekli API'leri Etkinlestirme
+
+Bu projede hem AI hem de deploy hizmetlerini kullanacagiz. Asagidaki butona tiklayarak hepsini bir seferde etkinlestirin:
+
+```sh
+gcloud services enable run.googleapis.com cloudbuild.googleapis.com
+```
+
+```sh
+gcloud services enable artifactregistry.googleapis.com aiplatform.googleapis.com
+```
+
+```sh
+gcloud services enable cloudresourcemanager.googleapis.com
+```
+
+**Ne etkinlestirdik?**
+
+- **Cloud Run** — Uygulamamizi serverless olarak calistiracak platform
+- **Cloud Build** — Kaynak koddan otomatik Docker image olusturacak servis
+- **Cloud Resource Manager** — Proje ve kaynak yonetimi
+- **Artifact Registry** — Docker image deposu
+- **Vertex AI** — Google'in AI platformu, Gemini modeline erisim saglar
+
+**Tip:** Etkinlestirme birkac saniye surebilir. Yesil tik gorunene kadar bekleyin.
+
+## Vertex AI Izin Kurulumu
+
+Bu uygulama Vertex AI uzerinden Gemini modeline baglanarak YouTube videolarini ozetliyor. Bunun icin Cloud Run servisinin Vertex AI'a erisim iznine ihtiyaci var.
+
+### Proje ID'nizi kaydedin
+
+Once aktif projenizi bir degiskene atayin — bu degiskeni tutorial boyunca kullanacagiz:
+
+```sh
+export PROJECT_ID=$(gcloud config get-value project)
+```
+
+```sh
+echo "Proje ID: $PROJECT_ID"
+```
+
+Proje ID'nizi gormelisiniz. Bos geliyorsa proje secmeden devam etmissiniz demektir — geri donup proje secin.
+
+### Repo dizinini bulun
+
+Tutorial baslarken proje GitHub'dan otomatik klonlandi. Repo dizinini bir degiskene kaydedin — sonraki adimlarda kullanacagiz:
+
+```sh
+export REPO_DIR=$(dirname $(find ~ -maxdepth 4 -name "summarizer-app" -type d 2>/dev/null | head -1))
+echo "Repo dizini: $REPO_DIR"
+```
+
+`Repo dizini: /home/.../gcp-workshop-tutorial` benzeri bir yol gormelisiniz. Bos veya sadece `.` geliyorsa README'deki manuel klonlama adimini takip edip Cloud Shell'i tazeleyin.
+
+### Gerekli izinleri verin
+
+Bu adimda gerekli tum izinleri tek seferde verecek scripti calistiriyoruz:
+
+```sh
+bash $REPO_DIR/setup-iam.sh $PROJECT_ID
+```
+
+Script ne yapar:
+- Cloud Run servisine Vertex AI, Storage ve Logging izinleri verir
+- Cloud Build servisine Artifact Registry, Cloud Run ve IAM izinleri verir
+
+**Ne yapti bu komutlar?**
+
+- **aiplatform.user** — Gemini modeline istek gonderme izni (Compute SA)
+- **storage.admin** — Deploy sirasinda kaynak dosyalari Cloud Storage'a yukleme izni (Compute SA)
+- **logging.logWriter** — Uygulama loglarini Cloud Logging'e yazma izni (Compute SA)
+- **artifactregistry.writer** — Cloud Build'in Docker image'i Artifact Registry'e push etme izni
+- **run.admin** — Cloud Build'in Cloud Run servisini olusturma ve guncelleme izni
+- **iam.serviceAccountUser** — Cloud Build'in service account adina islem yapabilme izni
+
+**Neden Vertex AI?**
+Vertex AI, Google'in kurumsal AI platformudur. Her Gemini cagrisi dogrudan GCP kredinizden dusuler — boylece workshop kredinizi somut olarak kullanmis olursunuz.
+
+## Proje Dosyalarini Indirme
+
+Uygulama dosyalari GitHub'da hazir bekliyor.
+
+```sh
+export APP_DIR=$REPO_DIR/summarizer-app
+echo $APP_DIR
+```
+
+```sh
+cd $APP_DIR
+```
+
+Dosyalari listeleyin:
+
+```sh
+ls -la
+```
+
+Su dosyalari gormelisiniz:
+
+- **app.py** — Flask backend + Gemini AI entegrasyonu
+- **requirements.txt** — Python kutuphaneleri
+- **Dockerfile** — Docker paketleme tarifi
+- **templates/index.html** — Web arayuzu
+
+**Not:** Bu repo tutorial baslarken otomatik olarak klonlandi. Dosyalar hazir!
+
+## Projeyi Anlama: app.py
+
+Backend kodunu inceleyelim:
+
+```sh
+cat app.py
+```
+
+### Kodun yaptiklari
+
+**1) Vertex AI baglantisi:**
+Uygulama, Vertex AI uzerinden Gemini 2.5 Flash modeline baglanir. API key gerekmez — Cloud Run'un service account kimligini kullanir.
+
+**2) YouTube ozeti nasil calisir:**
+Gemini'ye YouTube video URL'si ve bir prompt gonderilir. Gemini videoyu analiz edip ozet uretir. Altyazi zorunlu degil — Gemini videoyu direkt anlayabilir.
+
+**3) Iki temel route (endpoint):**
+- `GET /` — Ana sayfayi gosterir (HTML form)
+- `POST /summarize` — Video linkini alir, Gemini'ye gonderir, ozeti dondurur
+
+## Projeyi Anlama: index.html
+
+Frontend kodunu inceleyelim:
+
+```sh
+cat templates/index.html
+```
+
+Kullanicidan iki sey aliyor:
+
+- **YouTube URL** — Ozetlenecek videonun linki
+- **Ozet Tipi** — Hizli (2-3 cumle), Detayli (ana noktalar), Genis (kapsamli analiz) seceneklerinden biri
+
+## Vertex AI ve Gemini Nedir?
+
+Bu projede kullandigimiz en onemli kavram Gemini API.
+
+**Vertex AI:** Google'in kurumsal AI platformu. Gemini dahil tum Google AI modellerine API uzerinden erisim saglar. Her istek GCP kredinizden dusulur.
+
+**Gemini 2.5 Flash:** Google'in hizli ve ekonomik AI modelidir. Metin anlama, ozetleme, soru-cevap gibi gorevlerde cok basarilidir.
+
+**Kodda nasil kullaniliyor?**
+```python
+import vertexai
+from vertexai.generative_models import GenerativeModel
+
+# Vertex AI baslat (proje ID otomatik okunur)
+vertexai.init(project=PROJECT_ID, location="us-central1")
+
+# Modeli sec
+model = GenerativeModel("gemini-2.5-flash")
+
+# Prompt gonder, ozet al
+response = model.generate_content(f"Summarize: {youtube_url}")
+```
+
+Bu uc adim tum AI ozetleme mekanizmasinin ozudur.
+
+## Kredi ve Budget Kurulumu
+
+Workshop'ta size verilen krediyi bu projede kullanacaksiniz. Deploy etmeden once budget kurarak harcamayi takip altina alalim.
+
+### Kredinizi kontrol edin
+
+Billing sayfasina gidin:
+
+Tarayicinizda yeni sekme ac ve su adrese git: [console.cloud.google.com/billing](https://console.cloud.google.com/billing)
+
+Sol menuden **Credits** sekmesine tiklayin. Size verilen workshop kredisini burada gormelisiniz.
+
+### Budget Alert kurun
+
+Budget'i Cloud Console uzerinden olusturun:
+
+Su adrese git: [console.cloud.google.com/billing/budgets](https://console.cloud.google.com/billing/budgets)
+
+**Create budget** butonuna basin:
+
+1. Name: "Workshop Budget"
+2. Amount: $5
+3. Alert thresholds: %50, %90, %100
+4. **Finish** butonuna basin
+
+**Tip:** Budget sadece uyari verir, hizmetleri otomatik durdurmaz. Ama ne kadar harcadigini her an bilirsin.
+
+## Cloud Run'a Deploy Etme
+
+Simdi uygulamayi internete aciyoruz!
+
+### Deploy komutunu calistirin
+
+Repo'da hazir bekleyen deploy scriptini calistirin:
+
+```sh
+bash $REPO_DIR/deploy.sh $PROJECT_ID
+```
+
+**Bu adim 3-5 dakika surebilir.** Python image indiriliyor ve kutuphaneler kuruluyor. Script otomatik olarak ilerler — herhangi bir onay sorusu cikmaz.
+
+### Basarili deploy ciktisi
+
+```terminal
+Service [youtube-summarizer] revision [youtube-summarizer-00001-xxx]
+    has been deployed and is serving 100 percent of traffic.
+Service URL: https://youtube-summarizer-xxxxx-uc.a.run.app
+```
+
+Bu URL sizin AI uygulamanizin adresi!
+
+## Uygulamayi Test Etme
+
+URL'yi bir degiskene atayin:
+
+Deploy scriptinin ciktisinda gordugunuz URL'yi kopyalayin.
+
+Ana sayfanin calisiyor mu kontrol edin (URL'yi degistirin):
+
+```sh
+curl -s BURAYA_SERVIS_URL/
+```
+
+### Tarayicida test edin
+
+URL'yi kopyalayip tarayicinizin adres cubuguna yapistirin.
+
+1. **Public** bir YouTube video URL'si yapistirin (test icin: `https://www.youtube.com/watch?v=jNQXAC9IVRw`)
+2. **Ozet Tipi** secin: Hizli / Detayli / Genis (varsayilan: Detayli)
+3. **Summarize Content** butonuna basin
+4. Gemini birkaç saniye icinde ozeti uretecek!
+
+> **Onemli:** Vertex AI sadece **public** veya kendi hesabinizla yuklediginiz YouTube videolarini isleyebilir. Private/unlisted videolarda erisim hatasi alirsiniz.
+
+## Cloud Console'dan Inceleme
+
+Deploy ettigimiz servisi goruntusel arayuzden inceleyelim.
+
+Tarayicinizda yeni sekme ac ve su adrese git: [console.cloud.google.com/run](https://console.cloud.google.com/run)
+
+`youtube-summarizer` servisine tiklayip su sekmeleri inceleyin:
+
+- **METRICS** — Kac istek geldi, Gemini kac saniyede yanit verdi
+- **LOGS** — Her ozetleme istegi burada gorunur
+- **REVISIONS** — Deploy gecmisi, her deploy yeni bir revision olusturur
+
+## Temizlik
+
+Workshop bittikten sonra gereksiz ucret olusmamaasi icin kaynaklari temizleyin.
+
+Once temizlik icin gerekli degiskenleri tanimlayin:
+
+```sh
+export PROJECT_ID=$(gcloud config get-value project)
+export REGION=us-central1
+export SVC=youtube-summarizer
+export REPO=cloud-run-source-deploy
+```
+
+Cloud Run servisini silin:
+
+```sh
+gcloud run services delete $SVC --region $REGION --project $PROJECT_ID --quiet
+```
+
+Artifact Registry deposunu silin:
+
+```sh
+gcloud artifacts repositories delete $REPO --location=$REGION --project=$PROJECT_ID --quiet
+```
+
+
+Veya projenin tamamini silin:
+
+```sh
+gcloud projects delete $PROJECT_ID
+```
+
+## Harcama Ozeti — Krediniz Nereye Gitti?
+
+Servisleri sildikten sonra bu projenin toplam ne kadara mal oldugunu goreceğiz.
+
+### Billing Reports sayfasina gidin
+
+Tarayicinizda yeni sekme ac ve su adrese git: [console.cloud.google.com/billing](https://console.cloud.google.com/billing)
+
+Sol menuden **Reports** sekmesine tiklayin.
+
+### Ne goreceksiniz?
+
+Grafik halinde hizmet bazinda harcama dagilimini goreceksiniz:
+
+- **Vertex AI** — Her Gemini cagrisi token basina ucretlendirilir. Kisa bir video ozeti yaklasik $0.001-0.01 arasinda.
+- **Cloud Run** — Container calisma suresi. Serverless oldugu icin sadece istek geldiginde ucret olusur.
+- **Cloud Build** — Image build suresi. Ilk deploy sonrasi ucret olusur.
+- **Artifact Registry** — Docker image depolama.
+
+Sag ust kosedeki tarih filtresini bugunle sinirlandirin. Projenin toplam maliyetini $0.05 - $0.30 arasinda gormeniz beklenir.
+
+**Onemli Not:** Harcamalar anlık gozukmez — birkac saat, bazen 24 saate kadar surebilir. Simdi $0.00 goruyorsaniz normal, birkaç saat sonra tekrar bakin.
+
+**Iste bu kadar!** Workshop boyunca harcanan gercek maliyeti gordunuz. Kredinizin geri kalani diger projelerde kullanilabilir.
+
+## Tebrikler!
+
+Gercek bir AI uygulamasi olusturup internete deploy ettiniz!
+
+**Bu projede ogrendikleriniz:**
+
+- **Vertex AI** — Google'in kurumsal AI platformu uzerinden Gemini modeline erisim
+- **IAM** — Service account ile guvenli yetkilendirme
+- **Flask full-stack** — Backend + frontend entegrasyonu
+- **Cloud Run deploy** — AI destekli uygulamalari serverless deploy etme
+- **Budget & Credits** — GCP kredi yonetimi ve maliyet takibi
+
+### Challenge
+
+Kendi basiniza deneyin:
+- Ayni videoyu **Hizli**, **Detayli** ve **Genis** modlarda ozetletip ciktilarin nasil farklilastigini gorun
+- Farkli turlerde (haber, egitim, vlog, teknik anlatim) videolar deneyin
+- `app.py`'deki `SUMMARY_PROMPTS` sozlugunu degistirip kendi 4. ozet tipinizi ekleyin (orn. "soru-cevap formatinda")
+
+### Faydali linkler
+
+- [Vertex AI dokumantasyonu](https://cloud.google.com/vertex-ai/docs)
+- [Gemini on Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/gemini)
+- [Cloud Run dokumantasyonu](https://cloud.google.com/run/docs)

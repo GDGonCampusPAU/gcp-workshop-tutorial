@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Cloud Lab | YouTube Summarizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .google-font {
+            font-family: 'Google Sans', sans-serif;
+        }
+
+        .gcp-blue { color: #4285F4; }
+        .gcp-red { color: #EA4335; }
+        .gcp-yellow { color: #FBBC04; }
+        .gcp-green { color: #34A853; }
+        
+        .btn-google {
+            background-color: #1a73e8;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-google:hover {
+            background-color: #1765cc;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-google:active {
+            transform: translateY(0);
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .input-field {
+            border: 1px solid #dadce0;
+            transition: all 0.2s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+        }
+
+        /* Wave Animation for Header Bars */
+        @keyframes wave {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .animate-wave {
+            animation: wave 1.2s ease-in-out infinite;
+        }
+
+        /* Entrance Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-up {
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .animate-fade-down {
+            animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+
+        /* Loading Animation */
+        .dot-flashing {
+            position: relative;
+            width: 10px;
+            height: 10px;
+            border-radius: 5px;
+            background-color: #1a73e8;
+            color: #1a73e8;
+            animation: dot-flashing 1s infinite linear alternate;
+            animation-delay: .5s;
+        }
+        .dot-flashing::before, .dot-flashing::after {
+            content: '';
+            display: inline-block;
+            position: absolute;
+            top: 0;
+        }
+        .dot-flashing::before {
+            left: -15px;
+            width: 10px;
+            height: 10px;
+            border-radius: 5px;
+            background-color: #1a73e8;
+            color: #1a73e8;
+            animation: dot-flashing 1s infinite alternate;
+            animation-delay: 0s;
+        }
+        .dot-flashing::after {
+            left: 15px;
+            width: 10px;
+            height: 10px;
+            border-radius: 5px;
+            background-color: #1a73e8;
+            color: #1a73e8;
+            animation: dot-flashing 1s infinite alternate;
+            animation-delay: 1s;
+        }
+        @keyframes dot-flashing {
+            0% { background-color: #1a73e8; }
+            50%, 100% { background-color: #ebebed; }
+        }
+
+        /* Subtle Background Slide */
+        .bg-slide {
+            background: linear-gradient(-45deg, #f8f9fa, #ffffff, #f1f3f4, #f8f9fa);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slide">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50 animate-fade-down">
+        <div class="flex items-center space-x-4">
+            <!-- Animated Wave Bars -->
+            <div class="flex space-x-1 items-end h-8">
+                <span class="w-2 h-5 bg-[#4285F4] rounded-full animate-wave" style="animation-delay: 0.0s"></span>
+                <span class="w-2 h-5 bg-[#EA4335] rounded-full animate-wave" style="animation-delay: 0.1s"></span>
+                <span class="w-2 h-5 bg-[#FBBC04] rounded-full animate-wave" style="animation-delay: 0.2s"></span>
+                <span class="w-2 h-5 bg-[#34A853] rounded-full animate-wave" style="animation-delay: 0.3s"></span>
+            </div>
+            <h1 class="text-xl font-medium text-gray-700">
+                Google Cloud <span class="text-gray-400 font-light mx-1">|</span> Summarizer Lab
+            </h1>
+        </div>
+        <div class="hidden md:flex items-center space-x-4 text-sm text-gray-600">
+            <span class="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full font-medium">
+                <i data-lucide="user" class="w-4 h-4 text-blue-600"></i>
+                GCP Workshop
+            </span>
+            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold hover:rotate-12 transition-transform cursor-default">M</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center p-4 md:p-8">
+        <div class="max-w-2xl w-full">
+            
+            <!-- Intro Text -->
+            <div class="mb-8 text-center opacity-0 animate-fade-up delay-100">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Video Intelligence Summarizer</h2>
+                <p class="text-gray-600 font-medium">Instructor: GCP Workshop</p>
+                <p class="text-gray-500 text-sm mt-1">Harnessing Gemini 2.5 Flash to distill insights from YouTube content.</p>
+            </div>
+
+            <!-- Main Card -->
+            <div class="card shadow-sm overflow-hidden opacity-0 animate-fade-up delay-200">
+                <div class="bg-blue-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                    <i data-lucide="zap" class="w-4 h-4 text-blue-600"></i>
+                    <span class="text-sm font-medium text-blue-800 uppercase tracking-wider">Configuration</span>
+                </div>
+                
+                <form id="summarizeForm" class="p-8 space-y-6">
+                    
+                    <!-- YouTube Link -->
+                    <div class="space-y-2 group">
+                        <label class="block text-sm font-medium text-gray-700 group-focus-within:text-blue-600 transition-colors">YouTube URL</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                                <i data-lucide="youtube" class="w-5 h-5"></i>
+                            </div>
+                            <input 
+                                type="text" 
+                                name="youtube_link" 
+                                placeholder="https://www.youtube.com/watch?v=..." 
+                                required
+                                class="input-field w-full pl-10 pr-4 py-3 rounded-md focus:ring-2 focus:ring-blue-100"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Model (sabit) -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 text-blue-600 flex items-center gap-1">
+                            <i data-lucide="cpu" class="w-4 h-4"></i> Model
+                        </label>
+                        <div class="input-field w-full px-4 py-3 rounded-md bg-gray-50 text-gray-700 flex items-center justify-between">
+                            <span class="font-medium">Gemini 2.5 Flash</span>
+                            <span class="text-xs text-gray-500">Hizli &amp; ekonomik</span>
+                        </div>
+                    </div>
+
+                    <!-- Summary Type -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700 text-blue-600 flex items-center gap-1">
+                            <i data-lucide="list" class="w-4 h-4"></i> Özet Tipi
+                        </label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="cursor-pointer rounded-md border border-gray-300 p-3 transition has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:ring-2 has-[:checked]:ring-blue-200 hover:bg-gray-50">
+                                <input type="radio" name="summary_type" value="quick" class="sr-only">
+                                <div class="flex flex-col items-center gap-1 text-center">
+                                    <i data-lucide="zap" class="w-5 h-5 text-yellow-500"></i>
+                                    <div class="font-medium text-sm">Hızlı</div>
+                                    <div class="text-xs text-gray-500">2-3 cümle</div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer rounded-md border border-gray-300 p-3 transition has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:ring-2 has-[:checked]:ring-blue-200 hover:bg-gray-50">
+                                <input type="radio" name="summary_type" value="detailed" class="sr-only" checked>
+                                <div class="flex flex-col items-center gap-1 text-center">
+                                    <i data-lucide="file-text" class="w-5 h-5 text-blue-500"></i>
+                                    <div class="font-medium text-sm">Detaylı</div>
+                                    <div class="text-xs text-gray-500">Ana noktalar</div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer rounded-md border border-gray-300 p-3 transition has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:ring-2 has-[:checked]:ring-blue-200 hover:bg-gray-50">
+                                <input type="radio" name="summary_type" value="broad" class="sr-only">
+                                <div class="flex flex-col items-center gap-1 text-center">
+                                    <i data-lucide="layers" class="w-5 h-5 text-green-500"></i>
+                                    <div class="font-medium text-sm">Geniş</div>
+                                    <div class="text-xs text-gray-500">Kapsamlı analiz</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-4">
+                        <button 
+                            type="submit" 
+                            id="submitBtn"
+                            class="btn-google w-full text-white font-medium py-4 rounded-md flex items-center justify-center gap-2 group"
+                        >
+                            <span>Summarize Content</span>
+                            <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Summary Result -->
+            <div id="summaryResult" class="card shadow-sm overflow-hidden mt-6 hidden">
+                <div class="bg-green-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-4 h-4 text-green-600"></i>
+                    <span class="text-sm font-medium text-green-800 uppercase tracking-wider">Summary</span>
+                </div>
+                <div id="summaryText" class="p-8 text-gray-700 leading-relaxed whitespace-pre-wrap"></div>
+            </div>
+
+            <!-- Workshop Footer Info -->
+            <div class="mt-8 grid grid-cols-3 gap-4 text-center opacity-0 animate-fade-up delay-300">
+                <div class="p-3 hover:bg-white rounded-lg transition-colors cursor-default">
+                    <div class="text-blue-600 font-bold text-xl">1M+</div>
+                    <div class="text-xs text-gray-500 uppercase">Tokens Window</div>
+                </div>
+                <div class="p-3 border-x border-gray-200 hover:bg-white rounded-lg transition-colors cursor-default">
+                    <div class="text-green-600 font-bold text-xl">Low</div>
+                    <div class="text-xs text-gray-500 uppercase">Latency</div>
+                </div>
+                <div class="p-3 hover:bg-white rounded-lg transition-colors cursor-default">
+                    <div class="text-red-600 font-bold text-xl">Lab</div>
+                    <div class="text-xs text-gray-500 uppercase">Environment</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Simple Custom Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/90 backdrop-blur-md hidden flex-col items-center justify-center z-[100] transition-opacity duration-300">
+        <div class="dot-flashing mb-8"></div>
+        <p class="google-font text-lg text-gray-700 animate-pulse">Vertex AI is processing your request...</p>
+        <p class="text-sm text-gray-500 mt-2">GCP Workshop's Summarizer Lab</p>
+    </div>
+
+    <footer class="p-6 text-center text-gray-400 text-xs opacity-0 animate-fade-up delay-300">
+        &copy; 2026 GCP Workshop | Google Cloud Workshop. For educational purposes only.
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        const form = document.getElementById('summarizeForm');
+        const loading = document.getElementById('loadingOverlay');
+        const summaryResult = document.getElementById('summaryResult');
+        const summaryText = document.getElementById('summaryText');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            loading.classList.remove('hidden');
+            loading.classList.add('flex');
+            loading.style.opacity = "0";
+            requestAnimationFrame(() => { loading.style.opacity = "1"; });
+            summaryResult.classList.add('hidden');
+
+            const formData = new FormData(form);
+            try {
+                const response = await fetch('/summarize', { method: 'POST', body: formData });
+                const text = await response.text();
+                loading.style.opacity = "0";
+                setTimeout(() => { loading.classList.add('hidden'); loading.classList.remove('flex'); }, 300);
+                summaryText.innerHTML = marked.parse(text);
+                summaryResult.classList.remove('hidden');
+                summaryResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (err) {
+                loading.style.opacity = "0";
+                setTimeout(() => { loading.classList.add('hidden'); loading.classList.remove('flex'); }, 300);
+                summaryText.textContent = 'Error: ' + err.message;
+                summaryResult.classList.remove('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
